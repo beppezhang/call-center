@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop" 
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/tx  http://www.springframework.org/schema/tx/spring-tx.xsd
+    http://www.springframework.org/schema/aop  http://www.springframework.org/schema/aop/spring-aop.xsd">
+   
+    
+    <context:property-placeholder location="classpath*:*.properties" ignore-unresolvable="true" system-properties-mode="OVERRIDE"/>
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">  
+        <property name="driverClassName" value="${jdbc.driverClassName}" />  
+        <property name="url" value="${jdbc.url}" />  
+        <property name="username" value="${jdbc.username}" />  
+        <property name="password" value="${jdbc.password}" />  
+        <!-- 连接池最大使用连接数量 -->  
+        <property name="maxActive" value="${jdbc.maxActive}" />  
+        <!-- 初始化大小 -->  
+        <property name="initialSize" value="${jdbc.initialSize}" />  
+        <!-- 获取连接最大等待时间 -->  
+        <property name="maxWait" value="${jdbc.maxWait}" />  
+        <!-- 连接池最小空闲 -->  
+        <property name="minIdle" value="${jdbc.minIdle}" />    
+        <!-- 逐出连接的检测时间间隔 -->  
+        <property name="timeBetweenEvictionRunsMillis" value="${jdbc.timeBetweenEvictionRunsMillis}" />  
+        <!-- 最小逐出时间 -->  
+        <property name="minEvictableIdleTimeMillis" value="${jdbc.minEvictableIdleTimeMillis}" />  
+        <!-- 测试有效用的SQL Query -->  
+        <property name="validationQuery" value="SELECT 'x'" />  
+        <!-- 连接空闲时测试是否有效 -->  
+        <property name="testWhileIdle" value="true" />  
+        <!-- 获取连接时测试是否有效 -->  
+        <property name="testOnBorrow" value="false" />  
+        <!-- 归还连接时是否测试有效 -->  
+        <property name="testOnReturn" value="false" />  
+        
+ 		<!-- 超过时间限制是否回收 打开removeAbandoned功能 -->
+        <property name="removeAbandoned" value="false" />
+        <!-- 180秒，也就是3分钟 -->
+        <property name="removeAbandonedTimeout" value="180" />
+        <!-- 关闭abanded连接时输出错误日志 -->
+        <property name="logAbandoned" value="true" />      
+        
+ 		<!--  监控数据库 
+        <property name="filters" value="mergeStat" />  -->         
+    </bean>   
+    
+    
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="typeAliasesPackage" value="bz.sunlight.dto" /> 
+        <property name="dataSource" ref="dataSource" />
+        <property name="mapperLocations" value="classpath:bz/sunlight/mapper/*.xml" />
+    </bean>    
+  
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    	
+        <property name="basePackage" value="bz.sunlight.dao" />
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+    </bean> 
+    
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>    
+    
+  	<tx:annotation-driven transaction-manager="transactionManager" /> 
+    
+</beans>       
+      
+      
+      
+      
+      
+      
+      
+      

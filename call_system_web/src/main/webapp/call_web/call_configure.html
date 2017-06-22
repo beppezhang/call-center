@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>外呼管理—外呼选项配置</title>
+    <link rel="stylesheet" href="css/common/reset.css">
+    <link rel="stylesheet" href="css/elementui.css">
+    <link rel="stylesheet" href="css/common/nav_header.css"/>
+    <style>
+        .el-form--inline .el-form-item.item-mr {margin-right: 20px;margin-bottom: 0;}
+        .hangupPosition .el-form-item__label { float: left; padding: 11px 0;}
+        .hangupPosition .el-form-item__content {float: left;width: 400px;}
+        #app .quit {color: red;cursor: pointer;  }
+        .toolbar {background: #f2f2f2;padding: 10px;margin: 10px 0px;}
+        .batch { margin: 10px 0; }
+        .comSty { width: inherit; margin-left: 20px;}
+    </style>
+    <script src="js/vue.js"></script>
+    <script src="js/elementui.js"></script>
+    <script src="js/axios.min.js"></script>
+    <script src="js/common/cookie.js"></script>
+    <script src="js/common/header.js"></script>
+    <script src="js/common/format.js"></script>
+    <script src="js/common/nav.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-row class="container">
+        <header-list></header-list>
+        <el-col :span="24" class="main">
+            <!-- 侧边栏 -->
+            <nav-list index="1-3"></nav-list>
+            <section class="content-container">
+                <div class="grid-content bg-purple-light">
+                    <el-row>
+                        <!-- 面包屑 -->
+                        <el-col :span="24" class="breadcrumb-container" v-cloak>
+                            <el-breadcrumb separator="/">
+                                <el-breadcrumb-item>首页</el-breadcrumb-item>
+                                <el-breadcrumb-item>外呼管理</el-breadcrumb-item>
+                                <el-breadcrumb-item>外呼选项配置</el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </el-col>
+                        <el-col :span="24" class="content-wrapper" v-cloak>
+                            <!--主体内容-->
+                            <!--搜索-->
+                            <div class="batch">
+                                <span class="">类型：</span>
+                                <el-select v-model="defaultOption" filterable placeholder="请选择类型"
+                                           @change="changeOption">
+                                    <el-option
+                                            v-for="item in options"
+                                            :label="item.label"
+                                            :value="item.value">
+                                    </el-option>
+                                </el-select>
+                                <el-input placeholder="名称" v-model="name" class="comSty"></el-input>
+                                <el-button type="primary" @click="handleSearch">搜索</el-button>
+                                <el-button type="primary" @click="handleAdd">新增</el-button>
+                            </div>
+                            <!--列表-->
+                            <el-table :data="tableData" v-loading="listLoading" stripe border highlight-current-row
+                                      style="width: 902px">
+                                <el-table-column align="center" prop="name" label="名称" width="240"></el-table-column>
+                                <el-table-column align="center" prop="createPerson" label="创建人" width="240"></el-table-column>
+                                <el-table-column align="center" prop="create_time" label="创建时间" width="220"></el-table-column>
+                                <el-table-column align="center" label="操作" width="200">
+                                    <template scope="scope">
+                                        <el-button @click="handleEdit(scope.$index, scope.row)" size="small">编辑
+                                        </el-button>
+                                        <el-button size="small" type="danger"
+                                                   @click="handleDelete(scope.$index, scope.row)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+
+                            <!-- 新增页面 -->
+                            <el-dialog title="新增配置项" v-model="addFormVisible" :close-on-click-modal="false">
+                                <el-form :model="addForm" ref="addForm" label-width="80px" class="demo-ruleForm">
+                                    <el-form-item
+                                            label="名称："
+                                            prop="name"
+                                            :rules="[{ required: true, message: '请输入姓名', trigger: 'blur' }]">
+                                        <el-input v-model="addForm.name"></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="类型：">
+                                        <el-select v-model="defaultOption" placeholder="请选择类型">
+                                            <el-option
+                                                    v-for="item in options"
+                                                    :label="item.label"
+                                                    :value="item.value">
+                                            </el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-form>
+                                <div slot="footer" class="dialog-footer">
+                                    <el-button @click.native="addFormVisible = false">取 消</el-button>
+                                    <el-button type="primary" @click.native="addItem" :loading="addLoading">确 定
+                                    </el-button>
+                                </div>
+                            </el-dialog>
+                            <!-- 编辑页面 -->
+                            <el-dialog title="编辑配置项" v-model="editFormVisible" :close-on-click-modal="false">
+                                <el-form :model="editForm" ref="editForm" label-width="80px" class="demo-ruleForm">
+                                    <el-form-item
+                                            label="名称"
+                                            prop="name"
+                                            :rules="[{ required: true, message: '请输入名称', trigger: 'blur' }]">
+                                        <el-input v-model="editForm.name"></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="类型：">
+                                        <el-select v-model="defaultOption" placeholder="请选择类型">
+                                            <el-option
+                                                    v-for="item in options"
+                                                    :label="item.label"
+                                                    :value="item.value">
+                                            </el-option>
+                                        </el-select>
+                                    </el-form-item>
+                                </el-form>
+                                <div slot="footer" class="dialog-footer">
+                                    <el-button @click.native="editFormVisible = false">取 消</el-button>
+                                    <el-button type="primary" @click.native="editItem" :loading="editLoading">确 定
+                                    </el-button>
+                                </div>
+                            </el-dialog>
+                        </el-col>
+                    </el-row>
+                </div>
+            </section>
+        </el-col>
+    </el-row>
+
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            listLoading: false,
+            createPerson: '',
+            name: '',//名称
+            options: [],//下拉列表展示几批信息
+            defaultOption: '',
+            tableData: [],
+            addLoading: false,
+            addFormVisible: false,//是否显示新增界面
+            //新增界面数据
+            addForm: {
+                keyValueCategotyId: '',
+                name: '',
+                createPerson: ''
+            },
+            editLoading: false,
+            editFormVisible: false,//是否显示编辑界面
+            //编辑页面数据
+            editForm: {
+                id: '',//每条记录id
+                keyValueCategotyId: '',//分类id
+                name: ''
+            }
+        },
+        methods: {
+            //option改变时触发
+            changeOption: function (val) {
+                // console.log(val);
+                this.name='';
+                this.defaultOption = val;
+                this.getDefaultData(val);
+            },
+            //显示编辑界面
+            handleEdit: function (index, row) {
+                //console.log(row);
+                this.editFormVisible = true;
+                this.editForm = Object.assign({}, row);
+            },
+            //显示新增界面
+            handleAdd: function () {
+                this.addFormVisible = true;
+                this.addForm = {
+                    keyValueCategotyId: '',
+                    name: '',
+                    createPerson: ''
+                };
+            },
+            //确定新增
+            addItem: function () {
+                var _this = this;
+                this.$refs['addForm'].validate(function (valid) {
+                    if (valid) {
+                        _this.addForm.keyValueCategotyId = _this.defaultOption;
+                        _this.addForm.createPerson = _this.createPerson;
+                        //console.log(_this.addForm);
+                        axios.post('/keyValue/keyValue', _this.addForm).then(function (res) {
+                            _this.$message({
+                                type: 'success',
+                                message: '新增成功!'
+                            });
+                            _this.$refs['addForm'].resetFields();
+                            _this.addFormVisible = false;
+                            _this.getDefaultData(_this.defaultOption);
+                        }).catch(function (error) {
+                            if (error.response) {
+                                if(error.response.status==409){
+                                    _this.$message.error('该名称已存在，新增失败');
+                                    _this.addFormVisible = false;
+                                }
+                            } else {
+                                console.log('Error', error.message);
+                            }
+                        });
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            //确定编辑
+            editItem: function () {
+                var _this = this;
+                var editData = {};
+                this.$refs['editForm'].validate(function (valid) {
+                    if (valid) {
+                        console.log(_this.editForm);
+                        editData.id = _this.editForm.id;
+                        editData.keyValueCategotyId = _this.editForm.keyValueCategotyId;
+                        editData.name = _this.editForm.name;
+                        axios.put('/keyValue/keyValue', editData).then(function (res) {
+                            _this.$message({
+                                type: 'success',
+                                message: '编辑成功!'
+                            });
+                            _this.$refs['editForm'].resetFields();
+                            _this.editFormVisible = false;
+                            _this.getDefaultData(_this.defaultOption);
+                        }).catch(function (error) {
+                            console.log(error);
+                        });
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            //删除
+            handleDelete: function (index, row) {
+                var _this = this;
+                this.$confirm('确认删除该记录吗?', '提示', {
+                    type: 'warning'
+                }).then(function () {
+                    _this.listLoading = true;
+                    axios.put('/keyValue/keyValue/' + row.id).then(function (res) {
+                        _this.listLoading = false;
+                        _this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
+                        _this.getDefaultData(_this.defaultOption);
+                    }).catch(function (error) {
+                        console.log(error);
+                    });
+
+                }).catch(function () {
+                    _this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                })
+
+            },
+            //搜索
+            handleSearch: function () {
+                var _this=this;
+                var categoryId = this.defaultOption;
+                var itemName = this.name;
+                this.listLoading=true;
+                this.tableData=[];
+                axios.get('/keyValue/conditon?categoryId=' + categoryId + '&itemName=' + itemName).then(function (res) {
+                    console.log(res.data);
+                    _this.listLoading=false;
+                    //_this.name='';
+                    var data=res.data;
+                    for(var i=0;i<data.length;i++){
+                        _this.tableData.push({
+                            id: data[i].id,
+                            keyValueCategotyId: data[i].keyValueCategotyId,
+                            name: data[i].name,
+                            createPerson: data[i].createPerson,
+                            create_time: new Date(data[i].createTime).format('yyyy-MM-dd hh:mm:ss')
+                        })
+                    }
+
+                }).catch(function (error) {
+                    console.log(error);
+                })
+            },
+            //获取所有字典项以及数据
+            getDefaultData: function (val) {
+                var _this = this;
+                this.listLoading = true;
+                axios.get('/keyValue/keyValue').then(function (res) {
+                    _this.listLoading = false;
+                    var data = res.data;
+                    //console.log(data);
+                    var keyValueItems = [];
+                    _this.options = [];
+                    _this.tableData = [];
+                    var defaultData = data[0].keyValueItems; //默认显示
+                    //console.log(data);
+                    if (val) {
+                        _this.defaultOption = val;
+                        for (var i = 0; i < data.length; i++) {
+                            _this.options.push({
+                                value: data[i].id,
+                                label: data[i].name
+                            });
+                            if (data[i].id == val) {
+                                keyValueItems = data[i].keyValueItems;
+                                for (var j = 0; j < keyValueItems.length; j++) {
+                                    _this.tableData.push({
+                                        id: keyValueItems[j].id,
+                                        keyValueCategotyId: keyValueItems[j].keyValueCategotyId,
+                                        name: keyValueItems[j].name,
+                                        createPerson: keyValueItems[j].createPerson,
+                                        create_time: new Date(keyValueItems[j].createTime).format('yyyy-MM-dd h:m:s')
+                                    })
+                                }
+                            }
+                        }
+                    } else {
+                        _this.defaultOption = data[0].id;
+                        for (var i = 0; i < defaultData.length; i++) {
+                            _this.tableData.push({
+                                id: defaultData[i].id,
+                                keyValueCategotyId: defaultData[i].keyValueCategotyId,
+                                name: defaultData[i].name,
+                                createPerson: defaultData[i].createPerson,
+                                create_time: new Date(defaultData[i].createTime).format('yyyy-MM-dd h:m:s')
+                            })
+                        }
+                    }
+                })
+            }
+        },
+        mounted: function () {
+            this.createPerson = customerServerName || '';
+            this.getDefaultData();
+        }
+    });
+</script>
+</html>

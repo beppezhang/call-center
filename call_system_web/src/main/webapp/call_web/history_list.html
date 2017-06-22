@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>外呼管理—数据导入历史记录</title>
+    <link rel="stylesheet" href="css/common/reset.css">
+    <link rel="stylesheet" href="css/elementui.css">
+    <link rel="stylesheet" href="css/common/nav_header.css"/>
+    <script src="js/vue.js"></script>
+    <script src="js/elementui.js"></script>
+    <script src="js/axios.min.js"></script>
+    <script src="js/common/cookie.js"></script>
+    <script src="js/common/header.js"></script>
+    <script src="js/common/format.js"></script>
+    <script src="js/common/nav.js"></script>
+    <style>
+        .batch { margin: 10px 0; }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-row class="container">
+        <header-list></header-list>
+        <el-col :span="24" class="main">
+            <nav-list index="1-4-2"></nav-list>
+            <section class="content-container">
+                <div class="grid-content bg-purple-light">
+                    <el-row>
+                        <!-- 面包屑 -->
+                        <el-col :span="24" class="breadcrumb-container" v-cloak>
+                            <el-breadcrumb separator="/">
+                                <el-breadcrumb-item>首页</el-breadcrumb-item>
+                                <el-breadcrumb-item>外呼管理</el-breadcrumb-item>
+                                <el-breadcrumb-item>外呼清单管理</el-breadcrumb-item>
+                                <el-breadcrumb-item>数据导入历史</el-breadcrumb-item>
+                            </el-breadcrumb>
+                        </el-col>
+                        <el-col :span="24" class="content-wrapper" v-cloak>
+                            <!--主体内容-->
+                            <el-table :data="tableData" v-loading="listLoading" stripe border highlight-current-row
+                                      style="width:1442px;">
+                                <el-table-column prop="index" label="序号" width="240"></el-table-column>
+                                <el-table-column prop="batch" label="批次" width="240"></el-table-column>
+                                <el-table-column prop="name" label="客户ID" width="240"></el-table-column>
+                                <el-table-column prop="createPerson" label="标签" width="240"></el-table-column>
+                                <el-table-column prop="create_time" label="姓名" width="240"></el-table-column>
+                                <el-table-column prop="create_time" label="性别" width="240"></el-table-column>
+                            </el-table>
+                        </el-col>
+                    </el-row>
+                </div>
+            </section>
+        </el-col>
+    </el-row>
+
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data:{
+            listLoading:false,
+            tableData:[]
+        },
+        methods:{
+
+        },
+        mounted:function(){
+        }
+    })
+</script>
+</body>
+</html>
